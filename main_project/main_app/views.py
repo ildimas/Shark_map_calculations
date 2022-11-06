@@ -46,6 +46,16 @@ def index(request):
         folium.Marker([lat, lng], icon=DivIcon(icon_size=(150,36), icon_anchor=(7,20), html=f'<span style="font-size: 25pt; color : {color_html}; style=display: block"> &#9660; </span>'), 
                       tooltip=f'{some_db.estate_type}', popup=f'{some_db.price, some_db.apartment_type, some_db.address ,some_db.estate_type, some_db.estate_type, f"Этаж квартиры: {some_db.flat_floor}",f"Количество комнат: {some_db.rooms_count}", f"Площадь квартиры: {some_db.main_square}"}',
                       ).add_to(m)
+    entire_uploaded_db = uploaded_files.objects.all()
+    for a in range(len(entire_uploaded_db)):
+        some_uploaded_db = entire_uploaded_db[a]
+        lat_u = some_uploaded_db.coordinates_lat
+        lng_u = some_uploaded_db.coordinates_lng
+        folium.Marker([lng_u, lat_u], icon=DivIcon(icon_size=(150,36), icon_anchor=(7,20), html=f'<span style="font-size: 30pt; color : red ; style=display: block"> &#9660; </span>'), 
+                      tooltip=f'{some_uploaded_db.estate_type}', popup=f'{some_uploaded_db.apartment_type, some_uploaded_db.address ,some_uploaded_db.estate_type, some_uploaded_db.estate_type, f"Этаж квартиры: {some_uploaded_db.flat_floor}",f"Количество комнат: {some_uploaded_db.rooms_count}", f"Площадь квартиры: {some_uploaded_db.main_square}"}',
+                      ).add_to(m)
+    
+    
     if request.method == 'POST':
         print(request.POST)
         print(request.FILES)
@@ -62,14 +72,19 @@ def index(request):
             
         u_db = uploaded_files.objects
         for i in range(len(list_info)):
-            new_adress = ((list_info[i])[0])[8:]
+            new_adress = (list_info[i])[0]
             y = geocoder.osm(new_adress)
-            print(y.latlng)
+            if y.latlng == None:
+                continue
+            if (list_info[i])[1] == 'Студия':
+                rooms = 1
+            else:
+                rooms = (list_info[i])[1]
             if (list_info[i])[8] == 'Да':
                 (list_info[i])[8] = True
             else:
                 (list_info[i])[8] = False
-            u_db.create(address=new_adress, rooms_count=(list_info[i])[1], estate_type=(list_info[i])[2], building_floor=(list_info[i])[3]
+            u_db.create(address=new_adress, rooms_count=rooms, estate_type=(list_info[i])[2], building_floor=(list_info[i])[3]
                         ,apartment_type=(list_info[i])[5], flat_floor=(list_info[i])[6], main_square=(list_info[i])[7],
                         kithcen_square=15, balcony=(list_info[i])[8], subway_distance=(list_info[i])[10], decor=(list_info[i])[11],
                         coordinates_lng=(y.latlng)[1], coordinates_lat=(y.latlng)[0])
