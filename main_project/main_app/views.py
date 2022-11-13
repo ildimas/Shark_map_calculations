@@ -11,7 +11,7 @@ from folium.plugins import MarkerCluster
 from folium.plugins import HeatMap
 import geopy.distance
 from .estate_price import PriceCalculation
- 
+from folium import plugins
 
 def index(request):
     print('death loop restarted')
@@ -28,7 +28,7 @@ def index(request):
     #!###################################################################
     heatmap_data = []
     #Создание разметки москвы и geojson
-    layer_main_geo = folium.GeoJson(data=(open('D:\ЛЦТ_хакатон_основа\main_project\main_app\geoJson\moscow_geo.geojson', 'r', encoding='utf-8').read()), name='Районы с высокой стоимостью жилья')
+    layer_main_geo = folium.GeoJson(data=(open('D:\ЛЦТ_хакатон_основа\main_project\main_app\geoJson\moscow_geo.geojson', 'r', encoding='utf-8').read()), name='Районы с высокой стоимостью жилья', show=False)
     folium.GeoJsonTooltip(fields=['name', 'cartodb_id']).add_to(layer_main_geo)
     layer_main_geo.add_to(m)
     #ввод данных на карту
@@ -59,50 +59,42 @@ def index(request):
         
     #TODO#########################################################################
     #?############################################################################
+    final_appartment_price_list = []
     entire_uploaded_db = uploaded_files.objects.all()
     main_bd = main_db.objects.all()
     for i in range(len(entire_uploaded_db)):
-        shifts_list = []
+        fitable_obj_list = []; distances = []
         some_uploaded_db = entire_uploaded_db[i]
         target = [some_uploaded_db.coordinates_lat, some_uploaded_db.coordinates_lng]
+        dict_of_appartments = {}
         for g in range(len(main_bd)):
             some_main_bd = main_bd[g]
             coords = [some_main_bd.coordinates_lat, some_main_bd.coordinates_lng]
-            new_shift = abs(coords[0] - target[0]) + abs(coords[1] - target[1])
-            shifts_list.append([new_shift, g, coords])
-        # print(min(shifts_list))
-        object_1 = (min(shifts_list))
-        shifts_list.remove(min(shifts_list)) 
-        # print(min(shifts_list))
-        object_2 = (min(shifts_list))
+            try:
+                dist = geopy.distance.geodesic((coords[0], coords[1]), (target[0], target[1]))
+                if dist <= 3:
+                    fitable_obj_list.append(g)
+                    distances.append(dist)
+            except ValueError:
+                continue
+                
                     
-    #?############################################################################
-        obj1 = main_bd[object_1[1]]
-        obj2 = main_bd[object_2[1]]
-        distance_m_1 = geopy.distance.geodesic(((object_1[2])[0], (object_1[2])[1]), (target[0], target[1]))
-        distance_m_2 = geopy.distance.geodesic(((object_2[2])[0], (object_2[2])[1]), (target[0], target[1]))
-        ##!#######################################################################
-        #!#####################Нормализатор Данных################################
-        if obj1.decor == 'нет ремонта':
-            obj1.decor = 'без отделки'
-        if obj1.apartment_type == 'not stated':
-            obj1.apartment_type = 'панельный'
-        if obj1.apartment_type.find('-') != -1:
-            obj1.apartment_type = obj2.apartment_type[0: obj1.apartment_type.find('-')]
+    #?###########################################################################
+        for p in range(len(fitable_obj_list)):
+            obj = main_bd[fitable_obj_list[p]]
+            ##!#######################################################################
+            #!#####################Нормализатор Данных################################
+            if obj.decor == 'нет ремонта':
+                obj.decor = 'без отделки'
+            if obj.apartment_type == 'not stated':
+                obj.apartment_type = 'панельный'
+            if obj.apartment_type.find('-') != -1:
+                obj.apartment_type = obj.apartment_type[0: obj.apartment_type.find('-')]
+            #!########################################################################
+            #!########################################################################
+            dict_of_appartments[f"{p}"] = [obj.estate_type, obj.price, obj.subway_distance, obj.rooms_count, obj.main_square,
+                                        obj.kithcen_square, obj.flat_floor, obj.building_floor, obj.balcony, obj.decor, obj.apartment_type, distances[p]]
         
-        if obj2.decor == 'нет ремонта':
-            obj2.decor = 'без отделки'
-        if obj2.apartment_type == 'not stated':
-            obj2.apartment_type = 'панельный'
-        if obj2.apartment_type.find('-') != -1:
-            obj2.apartment_type = obj2.apartment_type[0: obj2.apartment_type.find('-')]
-        #!########################################################################
-        #!########################################################################
-        dict_of_two_appartments = {'1': [obj1.estate_type, obj1.price, obj1.subway_distance, obj1.rooms_count, obj1.main_square,
-                                         obj1.kithcen_square, obj1.flat_floor, obj1.building_floor, obj1.balcony, obj1.decor, obj1.apartment_type, distance_m_1
-                                         ], '2': [obj2.estate_type, obj2.price, obj2.subway_distance, obj2.rooms_count, obj2.main_square,
-                                         obj2.kithcen_square, obj2.flat_floor, obj2.building_floor, obj2.balcony, obj2.decor, obj2.apartment_type, distance_m_2
-                                         ]}
         main_object = [some_uploaded_db.estate_type, some_uploaded_db.subway_distance, some_uploaded_db.rooms_count,
                        some_uploaded_db.main_square, some_uploaded_db.kithcen_square, some_uploaded_db.flat_floor, 
                        some_uploaded_db.building_floor, some_uploaded_db.balcony, some_uploaded_db.decor, 
@@ -123,8 +115,8 @@ def index(request):
         price_more_than_km_num = 0          # кол-во квартир в пределах 3 км
         final_appartment_price = 0          # ФИНАЛЬНАЯ цена за квартиру   
 
-        for key, value in dict_of_two_appartments.items():
-            a = PriceCalculation(main_object, dict_of_two_appartments[key])
+        for key, value in dict_of_appartments.items():
+            a = PriceCalculation(main_object, dict_of_appartments[key])
             if value[11] <= 1:
                 price_less_than_km += value[1]
                 price_less_than_km_num += 1
@@ -141,20 +133,16 @@ def index(request):
         
         final_appartment_price = round(final_appartment_price * 0.955)
         print(final_appartment_price)
+        final_appartment_price_list.append(final_appartment_price)
         
-        # # print(f'Заданые координаты: {target}', f'Полученные координаты 1: {object_1[2]}')
-        # folium.Marker([(object_1[2])[0], (object_1[2])[1]], icon=DivIcon(icon_size=(150,36), icon_anchor=(7,20), html=f'<span style="font-size: 40pt; color : white ; style=display: block"> &#9660; </span>'), 
-        #                 tooltip=f"{main_bd[object_1[1]].estate_type}", popup=f'{main_bd[object_1[1]].apartment_type, main_bd[object_1[1]].address ,main_bd[object_1[1]].estate_type, main_bd[object_1[1]].estate_type, f"Этаж квартиры: {main_bd[object_1[1]].flat_floor}",f"Количество комнат: {main_bd[object_1[1]].rooms_count}", f"Площадь квартиры: {main_bd[object_1[1]].main_square}", "Это солевая квартира"}').add_to(m)
-        # # print(f'Заданые координаты: {target}', f'Полученные координаты 2: {object_2[2]}')
-        # folium.Marker([(object_2[2])[0], (object_2[2])[1]], icon=DivIcon(icon_size=(150,36), icon_anchor=(7,20), html=f'<span style="font-size: 40pt; color : black ; style=display: block"> &#9660; </span>'), 
-        #                 tooltip=f"{main_bd[object_2[1]].estate_type}", popup=f'{main_bd[object_2[1]].apartment_type, main_bd[object_2[1]].address ,main_bd[object_2[1]].estate_type, main_bd[object_2[1]].estate_type, f"Этаж квартиры: {main_bd[object_2[1]].flat_floor}",f"Количество комнат: {main_bd[object_2[1]].rooms_count}", f"Площадь квартиры: {main_bd[object_2[1]].main_square}", "Это солевая квартира"}').add_to(m)
-        # print('Маркеры загружены')
+
+
             
             
         
        
         upl_marker = folium.Marker([some_uploaded_db.coordinates_lat, some_uploaded_db.coordinates_lng], icon=DivIcon(icon_size=(150,36), icon_anchor=(7,20), html=f'<span style="font-size: 30pt; color : red ; style=display: block"> &#9660; </span>'), 
-                    tooltip=f'{some_uploaded_db.estate_type}', popup=f'{some_uploaded_db.apartment_type, some_uploaded_db.address ,some_uploaded_db.estate_type, some_uploaded_db.estate_type, f"Этаж квартиры: {some_uploaded_db.flat_floor}",f"Количество комнат: {some_uploaded_db.rooms_count}", f"Площадь квартиры: {some_uploaded_db.main_square}", f"ЦЕНА: {final_appartment_price}"}')
+                    tooltip=f'{some_uploaded_db.estate_type}', popup=f'{some_uploaded_db.apartment_type, some_uploaded_db.address ,some_uploaded_db.estate_type, some_uploaded_db.estate_type, f"Этаж квартиры: {some_uploaded_db.flat_floor}",f"Количество комнат: {some_uploaded_db.rooms_count}", f"Площадь квартиры: {some_uploaded_db.main_square}", f"ЦЕНА:{final_appartment_price}"}')
         cluster_uploaded.add_child(upl_marker)
     entire_uploaded_db.delete()
     
@@ -197,12 +185,15 @@ def index(request):
             
             
 
-   
-    HeatMap(heatmap_data, radius=30, overlay=False, show=False).add_to(folium.FeatureGroup(name='Тепловая карта стоимости').add_to(m))
-    # folium.plugins.HeatMapWithTime(heatmap_data, auto_play=True,max_opacity=0.8).add_to(folium.FeatureGroup(name='Тепловая карта').add_to(m))
+    minimap = plugins.MiniMap(toggle_display=True)
+    m.add_child(minimap)
+    plugins.Fullscreen(position='topright').add_to(m)
+    heatmap = folium.plugins.HeatMap(heatmap_data, radius=30, show=False, name='Тепловая карта стоимости жилья')
+    heatmap.add_to(m)
+    
     folium.LayerControl().add_to(m)
     m = m._repr_html_()
-    context = {'m': m,}
+    context = {'m': m, 'fin_price': final_appartment_price_list,}
     return render(request, 'base.html', context=context)
 
 
