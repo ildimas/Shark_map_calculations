@@ -118,17 +118,20 @@ class PriceCalculation:
         self.analog_appartment_list[1] *= (1 - self.appartment_square_diff[appartment_square_diff_appartment][appartment_square_diff_analog])
 
     def kitchen_square_difference(self):
-        for i in range(len(self.kitchen_square_diff_check)):
-            if self.analog_appartment_list[5] <= self.kitchen_square_diff_check[i]:
-                kitchen_square_diff_analog = i
-                break
-        
-        for i in range(len(self.kitchen_square_diff_check)):
-            if self.appartment_list[4] <= self.kitchen_square_diff_check[i]:
-                kitchen_square_diff_appartment = i
-                break
-        
-        self.analog_appartment_list[1] *= (1 + self.kitchen_square_diff[kitchen_square_diff_appartment][kitchen_square_diff_analog])
+        try:
+            for i in range(len(self.kitchen_square_diff_check)):
+                if self.analog_appartment_list[5] <= self.kitchen_square_diff_check[i]:
+                    kitchen_square_diff_analog = i
+                    break
+            
+            for i in range(len(self.kitchen_square_diff_check)):
+                if self.appartment_list[4] <= self.kitchen_square_diff_check[i]:
+                    kitchen_square_diff_appartment = i
+                    break
+            
+            self.analog_appartment_list[1] *= (1 + self.kitchen_square_diff[kitchen_square_diff_appartment][kitchen_square_diff_analog])
+        except UnboundLocalError:
+            self.analog_appartment_list[1] *= 1 
 
     def floor_location_difference(self):
         if self.analog_appartment_list[6] == 1:
@@ -171,21 +174,24 @@ class PriceCalculation:
         self.analog_appartment_list[1] += self.appartment_renovation_type_diff[appartment_renovation_type_difference_appartment][appartment_renovation_type_difference_analog]
 
     def appartment_walls_type_difference(self):
-        if self.analog_appartment_list[10] == 'панельный':
-            appartment_walls_type_difference_analog = 0
-        if self.analog_appartment_list[10] == 'монолитный':
-            appartment_walls_type_difference_analog = 1
-        if self.analog_appartment_list[10] == 'кирпичный':
-            appartment_walls_type_difference_analog = 2
+        try:
+            if self.analog_appartment_list[10] == 'панельный':
+                appartment_walls_type_difference_analog = 0
+            if self.analog_appartment_list[10] == 'монолитный':
+                appartment_walls_type_difference_analog = 1
+            if self.analog_appartment_list[10] == 'кирпичный':
+                appartment_walls_type_difference_analog = 2
 
-        if self.appartment_list[9] == 'панельный':
-            appartment_walls_type_difference_appartment = 0
-        elif self.appartment_list[9] == 'монолитный':
-            appartment_walls_type_difference_appartment = 1
-        elif self.appartment_list[9] == 'кирпичный':
-            appartment_walls_type_difference_appartment = 2
+            if self.appartment_list[9] == 'панельный':
+                appartment_walls_type_difference_appartment = 0
+            elif self.appartment_list[9] == 'монолитный':
+                appartment_walls_type_difference_appartment = 1
+            elif self.appartment_list[9] == 'кирпичный':
+                appartment_walls_type_difference_appartment = 2
 
-        self.analog_appartment_list[1] *= (1 + self.appartment_walls_type_diff[appartment_walls_type_difference_appartment][appartment_walls_type_difference_analog])
+            self.analog_appartment_list[1] *= (1 + self.appartment_walls_type_diff[appartment_walls_type_difference_appartment][appartment_walls_type_difference_analog])
+        except UnboundLocalError:
+            self.analog_appartment_list[1] *= 1
 
 
 if __name__ == "__main__":

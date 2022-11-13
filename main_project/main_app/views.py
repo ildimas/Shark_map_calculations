@@ -10,7 +10,7 @@ import openpyxl
 from folium.plugins import MarkerCluster
 from folium.plugins import HeatMap
 import geopy.distance
-from estate_price import PriceCalculation
+from .estate_price import PriceCalculation
  
 
 def index(request):
@@ -142,19 +142,19 @@ def index(request):
         final_appartment_price = round(final_appartment_price * 0.955)
         print(final_appartment_price)
         
-        # print(f'Заданые координаты: {target}', f'Полученные координаты 1: {object_1[2]}')
-        folium.Marker([(object_1[2])[0], (object_1[2])[1]], icon=DivIcon(icon_size=(150,36), icon_anchor=(7,20), html=f'<span style="font-size: 40pt; color : white ; style=display: block"> &#9660; </span>'), 
-                        tooltip=f"{main_bd[object_1[1]].estate_type}", popup=f'{main_bd[object_1[1]].apartment_type, main_bd[object_1[1]].address ,main_bd[object_1[1]].estate_type, main_bd[object_1[1]].estate_type, f"Этаж квартиры: {main_bd[object_1[1]].flat_floor}",f"Количество комнат: {main_bd[object_1[1]].rooms_count}", f"Площадь квартиры: {main_bd[object_1[1]].main_square}", "Это солевая квартира"}').add_to(m)
-        # print(f'Заданые координаты: {target}', f'Полученные координаты 2: {object_2[2]}')
-        folium.Marker([(object_2[2])[0], (object_2[2])[1]], icon=DivIcon(icon_size=(150,36), icon_anchor=(7,20), html=f'<span style="font-size: 40pt; color : black ; style=display: block"> &#9660; </span>'), 
-                        tooltip=f"{main_bd[object_2[1]].estate_type}", popup=f'{main_bd[object_2[1]].apartment_type, main_bd[object_2[1]].address ,main_bd[object_2[1]].estate_type, main_bd[object_2[1]].estate_type, f"Этаж квартиры: {main_bd[object_2[1]].flat_floor}",f"Количество комнат: {main_bd[object_2[1]].rooms_count}", f"Площадь квартиры: {main_bd[object_2[1]].main_square}", "Это солевая квартира"}').add_to(m)
-        print('Маркеры загружены')
+        # # print(f'Заданые координаты: {target}', f'Полученные координаты 1: {object_1[2]}')
+        # folium.Marker([(object_1[2])[0], (object_1[2])[1]], icon=DivIcon(icon_size=(150,36), icon_anchor=(7,20), html=f'<span style="font-size: 40pt; color : white ; style=display: block"> &#9660; </span>'), 
+        #                 tooltip=f"{main_bd[object_1[1]].estate_type}", popup=f'{main_bd[object_1[1]].apartment_type, main_bd[object_1[1]].address ,main_bd[object_1[1]].estate_type, main_bd[object_1[1]].estate_type, f"Этаж квартиры: {main_bd[object_1[1]].flat_floor}",f"Количество комнат: {main_bd[object_1[1]].rooms_count}", f"Площадь квартиры: {main_bd[object_1[1]].main_square}", "Это солевая квартира"}').add_to(m)
+        # # print(f'Заданые координаты: {target}', f'Полученные координаты 2: {object_2[2]}')
+        # folium.Marker([(object_2[2])[0], (object_2[2])[1]], icon=DivIcon(icon_size=(150,36), icon_anchor=(7,20), html=f'<span style="font-size: 40pt; color : black ; style=display: block"> &#9660; </span>'), 
+        #                 tooltip=f"{main_bd[object_2[1]].estate_type}", popup=f'{main_bd[object_2[1]].apartment_type, main_bd[object_2[1]].address ,main_bd[object_2[1]].estate_type, main_bd[object_2[1]].estate_type, f"Этаж квартиры: {main_bd[object_2[1]].flat_floor}",f"Количество комнат: {main_bd[object_2[1]].rooms_count}", f"Площадь квартиры: {main_bd[object_2[1]].main_square}", "Это солевая квартира"}').add_to(m)
+        # print('Маркеры загружены')
             
             
         
        
         upl_marker = folium.Marker([some_uploaded_db.coordinates_lat, some_uploaded_db.coordinates_lng], icon=DivIcon(icon_size=(150,36), icon_anchor=(7,20), html=f'<span style="font-size: 30pt; color : red ; style=display: block"> &#9660; </span>'), 
-                    tooltip=f'{some_uploaded_db.estate_type}', popup=f'{some_uploaded_db.apartment_type, some_uploaded_db.address ,some_uploaded_db.estate_type, some_uploaded_db.estate_type, f"Этаж квартиры: {some_uploaded_db.flat_floor}",f"Количество комнат: {some_uploaded_db.rooms_count}", f"Площадь квартиры: {some_uploaded_db.main_square}"}')
+                    tooltip=f'{some_uploaded_db.estate_type}', popup=f'{some_uploaded_db.apartment_type, some_uploaded_db.address ,some_uploaded_db.estate_type, some_uploaded_db.estate_type, f"Этаж квартиры: {some_uploaded_db.flat_floor}",f"Количество комнат: {some_uploaded_db.rooms_count}", f"Площадь квартиры: {some_uploaded_db.main_square}", f"ЦЕНА: {final_appartment_price}"}')
         cluster_uploaded.add_child(upl_marker)
     entire_uploaded_db.delete()
     
