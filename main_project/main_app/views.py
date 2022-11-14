@@ -151,39 +151,44 @@ def index(request):
     
     
     if request.method == 'POST':
-        print(request.POST)
-        print(request.FILES)
-        file = request.FILES['file']
-        wb = openpyxl.load_workbook(file)
-        ws = wb.active
+        try:
+            print(request.POST)
+            print(request.FILES)
+            file = request.FILES['file']
+            wb = openpyxl.load_workbook(file)
+            ws = wb.active
 
-        list_info = []
-        for i in range(2, ws.max_row + 1):
-            list_info.append([
-            ws['A' + str(i)].value, ws['B' + str(i)].value, ws['C' + str(i)].value, ws['D' + str(i)].value,
-            ws['D' + str(i)].value, ws['E' + str(i)].value, ws['F' + str(i)].value, ws['G' + str(i)].value, 
-            ws['H' + str(i)].value, ws['I' + str(i)].value, ws['J' + str(i)].value, ws['K' + str(i)].value])
-            
-        u_db = uploaded_files.objects
-        for i in range(len(list_info)):
-            new_adress = 'Москва' + " " + (list_info[i])[0]
-            y = geocoder.osm(new_adress)
-            print(y.latlng)
-            if y.latlng == None:
-                continue
-            if (list_info[i])[1] == 'Студия':
-                rooms = 1
-            else:
-                rooms = (list_info[i])[1]
-            if (list_info[i])[8] == 'Да':
-                (list_info[i])[8] = True
-            else:
-                (list_info[i])[8] = False
-            u_db.create(address=new_adress, rooms_count=rooms, estate_type=(list_info[i])[2], building_floor=(list_info[i])[3]
-                        ,apartment_type=(list_info[i])[5], flat_floor=(list_info[i])[6], main_square=(list_info[i])[7],
-                        kithcen_square=15, balcony=(list_info[i])[8], subway_distance=(list_info[i])[10], decor=(list_info[i])[11],
-                        coordinates_lng=(y.latlng)[1], coordinates_lat=(y.latlng)[0])
-        return HttpResponseRedirect('/') 
+            list_info = []
+            for i in range(2, ws.max_row + 1):
+                list_info.append([
+                ws['A' + str(i)].value, ws['B' + str(i)].value, ws['C' + str(i)].value, ws['D' + str(i)].value,
+                ws['D' + str(i)].value, ws['E' + str(i)].value, ws['F' + str(i)].value, ws['G' + str(i)].value, 
+                ws['H' + str(i)].value, ws['I' + str(i)].value, ws['J' + str(i)].value, ws['K' + str(i)].value])
+                
+            u_db = uploaded_files.objects
+            for i in range(len(list_info)):
+                new_adress = 'Москва' + " " + (list_info[i])[0]
+                y = geocoder.osm(new_adress)
+                print(y.latlng)
+                if y.latlng == None:
+                    continue
+                if (list_info[i])[1] == 'Студия':
+                    rooms = 1
+                else:
+                    rooms = (list_info[i])[1]
+                if (list_info[i])[8] == 'Да':
+                    (list_info[i])[8] = True
+                else:
+                    (list_info[i])[8] = False
+                u_db.create(address=new_adress, rooms_count=rooms, estate_type=(list_info[i])[2], building_floor=(list_info[i])[3]
+                            ,apartment_type=(list_info[i])[5], flat_floor=(list_info[i])[6], main_square=(list_info[i])[7],
+                            kithcen_square=15, balcony=(list_info[i])[8], subway_distance=(list_info[i])[10], decor=(list_info[i])[11],
+                            coordinates_lng=(y.latlng)[1], coordinates_lat=(y.latlng)[0])
+            return HttpResponseRedirect('/') 
+        except BaseException:
+            entire_uploaded_db.delete()
+            print('Файлы не были загружены')
+            return HttpResponseRedirect('/')  
     #TODO#########################################################################        
             
             
