@@ -66,6 +66,8 @@ def index(request):
         fitable_obj_list = []; distances = []
         some_uploaded_db = entire_uploaded_db[i]
         target = [some_uploaded_db.coordinates_lat, some_uploaded_db.coordinates_lng]
+        if (target[0] < 55) or (target[0] > 57) or (target[1] < 36) or (target[1] > 38):
+            continue
         dict_of_appartments = {}
         for g in range(len(main_bd)):
             some_main_bd = main_bd[g]
@@ -123,14 +125,15 @@ def index(request):
             else:
                 price_more_than_km += value[1]
                 price_more_than_km_num += 1
-
-        if price_less_than_km_num == 0:
-            final_appartment_price += price_more_than_km / price_more_than_km_num
-        elif price_more_than_km_num == 0:
-            final_appartment_price += price_less_than_km / price_less_than_km_num
-        else:
-            final_appartment_price += ((price_less_than_km / price_less_than_km_num) * 1.2 + (price_more_than_km / price_more_than_km_num) * 0.8) / 2
-        
+        try:
+            if price_less_than_km_num == 0:
+                final_appartment_price += price_more_than_km / price_more_than_km_num
+            elif price_more_than_km_num == 0:
+                final_appartment_price += price_less_than_km / price_less_than_km_num
+            else:
+                final_appartment_price += ((price_less_than_km / price_less_than_km_num) * 1.2 + (price_more_than_km / price_more_than_km_num) * 0.8) / 2
+        except ZeroDivisionError:
+            pass
         final_appartment_price = round(final_appartment_price * 0.955)
         print(final_appartment_price)
         final_appartment_price_list.append(final_appartment_price)
@@ -163,7 +166,7 @@ def index(request):
             
         u_db = uploaded_files.objects
         for i in range(len(list_info)):
-            new_adress = (list_info[i])[0]
+            new_adress = 'Москва' + " " + (list_info[i])[0]
             y = geocoder.osm(new_adress)
             print(y.latlng)
             if y.latlng == None:
